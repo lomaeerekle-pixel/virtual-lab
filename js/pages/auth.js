@@ -6,20 +6,16 @@
   const U = VL.U, api = VL.api;
   const P = VL.pages = VL.pages || {};
 
-  const DEMO = [
-    { role: 'admin', icon: '🛡️', label: 'ადმინისტრატორი', email: VL.CONFIG.admin.email, pw: VL.CONFIG.admin.password },
-    { role: 'teacher', icon: '👩‍🏫', label: 'მასწავლებელი', email: 'teacher@lab.ge', pw: 'teacher123' },
-    { role: 'student', icon: '🧑‍🎓', label: 'მოსწავლე', email: 'student@lab.ge', pw: 'student123' },
-  ];
-
   const hero = `
     <div class="auth-hero">
       <div class="auth-logo">🔬</div>
       <h1>ვირტუალური ლაბორატორია</h1>
       <p>როცა ფიზიკური აღჭურვილობა არ არის — ექსპერიმენტები ბრაუზერში, კომპიუტერზე და ტელეფონზე.</p>
       <ul class="auth-features">
+        <li><span>🔌</span><div><b>სქემების კონსტრუქტორი</b><small>წრედები დაფაზე, რეალური ელექტრული სიმულაცია და Arduino</small></div></li>
         <li><span>⚡</span><div><b>ტექნიკური ლაბი</b><small>Arduino-ს სიმულატორი: LED, ღილაკი, სენსორები, სერვო</small></div></li>
-        <li><span>🔬</span><div><b>STEM ლაბი</b><small>ფიზიკა, ქიმია, მათემატიკა — ინტერაქტიული სიმულაციები</small></div></li>
+        <li><span>🔬</span><div><b>STEM ლაბი</b><small>37 ინტერაქტიული სიმულაცია 7 საგანში</small></div></li>
+        <li><span>📐</span><div><b>ფორმულები</b><small>218 ფორმულა კალკულატორებით</small></div></li>
         <li><span>🏫</span><div><b>კლასები და დავალებები</b><small>მასწავლებელი ავალებს, მოსწავლე ასრულებს და აგზავნის</small></div></li>
       </ul>
     </div>`;
@@ -36,12 +32,6 @@
             <button class="btn btn-primary btn-block" type="submit">შესვლა</button>
           </form>
           <p class="center muted">არ გაქვს ანგარიში? <a href="#register">დარეგისტრირდი</a></p>
-          <div class="demo-box">
-            <p class="small muted">🧪 სწრაფი შესვლა სადემონსტრაციო ანგარიშებით:</p>
-            <div class="demo-grid">
-              ${DEMO.map((d, i) => `<button class="demo-btn" data-demo="${i}"><span>${d.icon}</span><b>${d.label}</b><small>${U.esc(d.email)}</small></button>`).join('')}
-            </div>
-          </div>
         </div>
       </div>`;
     const form = view.querySelector('#login-form');
@@ -50,7 +40,6 @@
       catch (e) { U.toast(e.message, 'error'); }
     };
     form.addEventListener('submit', (e) => { e.preventDefault(); const d = U.formData(form); doLogin(d.email, d.password); });
-    U.on(view, 'click', '[data-demo]', (e, b) => { const d = DEMO[+b.dataset.demo]; form.email.value = d.email; form.password.value = d.pw; doLogin(d.email, d.pw); });
   };
 
   P.register = async (view) => {
@@ -68,7 +57,7 @@
             <label class="field"><span>სახელი და გვარი</span><input name="name" required placeholder="მაგ.: ნიკა გელაშვილი" autocomplete="name"></label>
             <label class="field"><span>ელ-ფოსტა</span><input name="email" type="email" required placeholder="name@school.ge" autocomplete="email"></label>
             <label class="field"><span>პაროლი (მინ. 6 სიმბოლო)</span><input name="password" type="password" required minlength="6" autocomplete="new-password"></label>
-            <label class="field" id="code-field"><span>კლასის კოდი (არასავალდებულო)</span><input name="classCode" placeholder="მაგ.: LAB9A1" style="text-transform:uppercase"></label>
+            <label class="field" id="code-field"><span>კლასის კოდი (არასავალდებულო)</span><input name="classCode" placeholder="მაგ.: K7P2QX" style="text-transform:uppercase"></label>
             <button class="btn btn-primary btn-block" type="submit">ანგარიშის შექმნა</button>
           </form>
           <p class="small muted">ℹ️ ადმინისტრატორის ანგარიში სისტემაში მხოლოდ ერთია და რეგისტრაციით ვერ შეიქმნება.</p>
@@ -87,5 +76,33 @@
         VL.router.go('home');
       } catch (err) { U.toast(err.message, 'error'); }
     });
+  };
+
+  /** პირველი შესვლისას საწყისი პაროლის სავალდებულო შეცვლა */
+  P.setPassword = async (view, params, user) => {
+    view.innerHTML = `
+      <div class="auth auth-single">
+        <div class="auth-card card">
+          <h2>🔐 დააყენე ახალი პაროლი</h2>
+          <p class="muted">უსაფრთხოებისთვის, პირველი შესვლისას საწყისი პაროლი უნდა შეცვალო.</p>
+          <form id="setpw-form" class="form" novalidate>
+            <label class="field"><span>მიმდინარე პაროლი</span><input name="old" type="password" autocomplete="current-password" required></label>
+            <label class="field"><span>ახალი პაროლი (მინ. 8 სიმბოლო)</span><input name="nw" type="password" autocomplete="new-password" required minlength="8"></label>
+            <label class="field"><span>გაიმეორე ახალი პაროლი</span><input name="nw2" type="password" autocomplete="new-password" required minlength="8"></label>
+            <button class="btn btn-primary btn-block" type="submit">შენახვა და გაგრძელება</button>
+          </form>
+          <p class="center"><a href="#" id="setpw-logout">⎋ გასვლა</a></p>
+        </div>
+      </div>`;
+    const form = view.querySelector('#setpw-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const d = U.formData(form);
+      if (!d.nw || d.nw.length < 8) return U.toast('ახალი პაროლი უნდა იყოს მინიმუმ 8 სიმბოლო', 'error');
+      if (d.nw !== d.nw2) return U.toast('პაროლები არ ემთხვევა', 'error');
+      try { await api.changePassword(user.id, d.old, d.nw); U.toast('პაროლი შეიცვალა', 'success'); VL.router.go('home'); }
+      catch (err) { U.toast(err.message, 'error'); }
+    });
+    view.querySelector('#setpw-logout').addEventListener('click', async (e) => { e.preventDefault(); await api.logout(); VL.router.go('login'); });
   };
 })(window.VL);

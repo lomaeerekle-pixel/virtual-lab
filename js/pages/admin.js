@@ -19,7 +19,7 @@
     view.innerHTML = `
       <div class="page">
         <div class="page-head">
-          <div><h1>🛡️ ადმინისტრატორის პანელი</h1><p class="muted">${U.esc(settings.schoolName)} · სისტემის მართვა</p></div>
+          <div><h1>🛡️ ადმინისტრატორის პანელი</h1><p class="muted">${settings.schoolName ? U.esc(settings.schoolName) + " · " : ""}სისტემის მართვა</p></div>
         </div>
         <div class="tabs">
           ${[['overview', '📊 მიმოხილვა'], ['users', '👥 მომხმარებლები'], ['classes', '🏫 კლასები'], ['labs', '🧪 ლაბორატორიები'], ['data', '💾 მონაცემები']].map(([k, l]) => `<button class="tab ${tab === k ? 'active' : ''}" data-tab="${k}">${l}</button>`).join('')}
@@ -103,7 +103,7 @@
               ${tog('allowTeacherRegistration', settings.allowTeacherRegistration, 'მასწავლებლის რეგისტრაცია', 'საჯარო ფორმით მასწავლებლის ანგარიშის შექმნა')}
               ${tog('allowStudentRegistration', settings.allowStudentRegistration, 'მოსწავლის რეგისტრაცია', 'საჯარო ფორმით მოსწავლის ანგარიშის შექმნა')}
               <form id="school-form" class="form">
-                <label class="field"><span>სკოლის სახელი</span><input name="schoolName" value="${U.esc(settings.schoolName)}"></label>
+                <label class="field"><span>სკოლის სახელი</span><input name="schoolName" value="${U.esc(settings.schoolName)}" placeholder="მაგ.: თბილისის №1 საჯარო სკოლა"></label>
                 <button class="btn btn-primary btn-sm" type="submit">შენახვა</button>
               </form>
               <h3>📚 კატალოგი</h3>
@@ -120,7 +120,7 @@
             <p>ყველა მონაცემი ინახება ბრაუზერის <code>localStorage</code>-ში (გასაღები: <code>${VL.CONFIG.storageKey}</code>). მონაცემთა ფენა (<code>js/core/store.js</code>) ასინქრონულია და მარტივად ჩანაცვლდება REST API-ით.</p>
             <div class="btn-row">
               <button class="btn btn-ghost" data-act="export">⧉ JSON ექსპორტი (კოპირება)</button>
-              <button class="btn btn-danger" data-act="reset">↺ დემო მონაცემების აღდგენა</button>
+              <button class="btn btn-danger" data-act="reset">↺ ყველა მონაცემის წაშლა</button>
             </div>
             <pre id="export-out" class="code-view" hidden></pre>
           </section>` : ''}
@@ -163,7 +163,7 @@
     if (sf) sf.addEventListener('submit', async (e) => { e.preventDefault(); await api.updateSettings({ schoolName: U.formData(sf).schoolName }); U.toast('შენახულია', 'success'); go({}); });
     U.on(view, 'click', '[data-act]', async (e, b) => {
       if (b.dataset.act === 'export') { const d = await api.exportData(); const txt = JSON.stringify(d, null, 2); const pre = view.querySelector('#export-out'); pre.hidden = false; pre.textContent = txt; U.copy(txt); }
-      if (b.dataset.act === 'reset') { if (await U.confirm('ყველა მონაცემი წაიშლება და დაბრუნდება საწყისი დემო მონაცემები. გავაგრძელოთ?', { danger: true, okLabel: 'აღდგენა' })) { await api.resetDemo(); U.toast('დემო მონაცემები აღდგენილია', 'success'); VL.router.go('login'); } }
+      if (b.dataset.act === 'reset') { if (await U.confirm('წაიშლება ყველა მომხმარებელი, კლასი, დავალება და სქემა ამ მოწყობილობაზე. დარჩება მხოლოდ ადმინისტრატორი საწყისი პაროლით. გავაგრძელოთ?', { danger: true, okLabel: 'წაშლა' })) { await api.resetAll(); U.toast('მონაცემები წაიშალა', 'success'); VL.router.go('login'); } }
     });
   };
 })(window.VL);

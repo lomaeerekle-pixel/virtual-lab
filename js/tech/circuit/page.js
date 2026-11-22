@@ -228,7 +228,7 @@
     window.addEventListener('pointerup', palUp);
     $('.cz-search').addEventListener('input', (e) => {
       const q = e.target.value.trim().toLowerCase();
-      view.querySelectorAll('.pal-item').forEach((b) => { b.hidden = q && !(P[b.dataset.type].name.toLowerCase().includes(q) || b.dataset.type.includes(q)); });
+      view.querySelectorAll('.pal-item').forEach((b) => { b.hidden = q && !((P[b.dataset.type].name + ' ' + VL.i18n.tr(P[b.dataset.type].name)).toLowerCase().includes(q) || b.dataset.type.includes(q)); });
     });
 
     /* ---- თვისებების პანელი ---- */

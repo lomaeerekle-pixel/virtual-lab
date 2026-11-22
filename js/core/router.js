@@ -33,10 +33,12 @@
       if (!def) { target = 'home'; def = routes.home; }
       if (!user && !def.public) { target = 'login'; def = routes.login; }
       if (user && def.roles && !def.roles.includes(user.role)) { target = 'home'; def = routes.home; }
+      if (user && user.mustChangePassword && routes.setpw) { target = 'setpw'; def = routes.setpw; }
+      if (target === 'setpw' && !(user && user.mustChangePassword)) { target = user ? 'home' : 'login'; def = routes[target]; }
       if (typeof cleanup === 'function') { try { cleanup(); } catch (e) { console.error(e); } }
       cleanup = null;
       current = target;
-      if (location.hash.replace(/^#/, '') !== target && target !== 'home') history.replaceState(null, '', '#' + target);
+      if (location.hash.replace(/^#/, '') !== target && target !== 'home' && target !== 'setpw') history.replaceState(null, '', '#' + target);
       // ახალი კონტეინერი ყოველ გვერდზე — წინა გვერდის მოვლენების დამმუშავებლები არ რჩება
       const old = document.getElementById('view');
       const view = old.cloneNode(false);

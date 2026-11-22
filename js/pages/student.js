@@ -58,7 +58,7 @@
             <section class="card">
               <div class="card-head"><h2>🏫 ჩემი კლასები</h2></div>
               <form id="join-form" class="inline-form">
-                <input name="code" placeholder="კლასის კოდი (მაგ. LAB9A1)" required style="text-transform:uppercase" aria-label="კლასის კოდი">
+                <input name="code" placeholder="კლასის კოდი (მაგ. K7P2QX)" required style="text-transform:uppercase" aria-label="კლასის კოდი">
                 <button class="btn btn-primary" type="submit">შეერთება</button>
               </form>
               ${classes.length ? `<ul class="simple-list">${classes.map((c) => `<li><div><b>${U.esc(c.name)}</b><small class="muted">👩‍🏫 ${U.esc(c.teacherName)}${c.subject ? ' · ' + U.esc(c.subject) : ''}</small></div><span class="pill">${asgs.filter((a) => a.classId === c.id).length} დავალება</span></li>`).join('')}</ul>` : U.empty('ჯერ არცერთ კლასში არ ხარ.', '🏫')}

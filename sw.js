@@ -1,5 +1,5 @@
 /* Offline cache for the Virtual Lab (PWA). Bump VERSION on every release. */
-const VERSION = 'vlab-202611221009';
+const VERSION = 'vlab-202611222247';
 const ASSETS = [
   "./",
   "./manifest.webmanifest",
@@ -14,6 +14,8 @@ const ASSETS = [
   "./js/pwa.js",
   "./js/catalog.js",
   "./js/core/codeutil.js",
+  "./js/core/i18n.js",
+  "./js/i18n/en.js",
   "./js/core/router.js",
   "./js/core/store.js",
   "./js/core/util.js",

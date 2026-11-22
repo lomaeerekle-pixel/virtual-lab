@@ -1,5 +1,5 @@
 /* ============================================================
- * store.js — მონაცემთა ფენა (localStorage) + დემო მონაცემები
+ * store.js — მონაცემთა ფენა (localStorage)
  *
  * ყველა ფუნქცია VL.api-ში აბრუნებს Promise-ს, ასე რომ მომავალში
  * რეალურ backend-ზე (REST/fetch) გადასვლა მხოლოდ ამ ფაილის
@@ -25,7 +25,7 @@
     del(k) { try { localStorage.removeItem(k); } catch (e) { delete mem[k]; } },
   };
 
-  /* ---------- პაროლის ჰეში (მხოლოდ დემოსთვის!) ----------
+  /* ---------- პაროლის ჰეში (კლიენტის მხარეს; სერვერზე გამოიყენეთ bcrypt/argon2) ----------
    * რეალურ სერვერზე გამოიყენეთ bcrypt/argon2. */
   function hash(pw) {
     const str = 'vlab-salt::' + pw;
@@ -42,76 +42,44 @@
 
   const uid = (p) => p + '_' + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
   const now = () => new Date().toISOString();
-  const dayOffset = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
   const clone = (o) => (o === undefined ? undefined : JSON.parse(JSON.stringify(o)));
   const fail = (msg) => { throw new Error(msg); };
   const normEmail = (e) => String(e || '').trim().toLowerCase();
   const genCode = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 6; i++) s += A[Math.floor(Math.random() * A.length)]; return s; };
 
-  /* ---------- დემო მონაცემები ---------- */
+  /* ---------- საწყისი მონაცემები: მხოლოდ ადმინისტრატორი ---------- */
+  const DEFAULT_SETTINGS = () => ({
+    modules: { tech: true, stem: true },
+    subjects: { physics: true, chemistry: true, math: true },
+    allowTeacherRegistration: true,
+    allowStudentRegistration: true,
+    schoolName: '',
+  });
+  function adminUser() {
+    return { id: 'u_admin', role: 'admin', name: CONFIG.admin.name, email: CONFIG.admin.email, passwordHash: hash(CONFIG.admin.password), createdAt: now(), blocked: false, mustChangePassword: true };
+  }
   function seed() {
-    const t = now();
-    const users = [
-      { id: 'u_admin', role: 'admin', name: CONFIG.admin.name, email: CONFIG.admin.email, passwordHash: hash(CONFIG.admin.password), createdAt: t, blocked: false },
-      { id: 'u_t1', role: 'teacher', name: 'ნინო ბერიძე', email: 'teacher@lab.ge', passwordHash: hash('teacher123'), createdAt: t, blocked: false },
-      { id: 'u_t2', role: 'teacher', name: 'დავით ლომიძე', email: 'davit@lab.ge', passwordHash: hash('teacher123'), createdAt: t, blocked: false },
-      { id: 'u_s1', role: 'student', name: 'გიორგი მელაძე', email: 'student@lab.ge', passwordHash: hash('student123'), createdAt: t, blocked: false },
-      { id: 'u_s2', role: 'student', name: 'მარიამ კაპანაძე', email: 'mariam@lab.ge', passwordHash: hash('student123'), createdAt: t, blocked: false },
-      { id: 'u_s3', role: 'student', name: 'ლუკა ჯაფარიძე', email: 'luka@lab.ge', passwordHash: hash('student123'), createdAt: t, blocked: false },
-      { id: 'u_s4', role: 'student', name: 'ანა წიკლაური', email: 'ana@lab.ge', passwordHash: hash('student123'), createdAt: t, blocked: false },
-    ];
-    const classes = [
-      { id: 'c_1', name: 'IX-ა — ფიზიკა და ტექნოლოგიები', subject: 'ფიზიკა / ტექნოლოგიები', teacherId: 'u_t1', code: 'LAB9A1', studentIds: ['u_s1', 'u_s2', 'u_s3'], createdAt: t },
-      { id: 'c_2', name: 'X-ბ — STEM კლუბი', subject: 'STEM', teacherId: 'u_t1', code: 'STEM10', studentIds: ['u_s2', 'u_s4'], createdAt: t },
-      { id: 'c_3', name: 'XI-გ — ქიმია', subject: 'ქიმია', teacherId: 'u_t2', code: 'CHEM11', studentIds: ['u_s3'], createdAt: t },
-    ];
-    const assignments = [
-      { id: 'a_1', classId: 'c_1', teacherId: 'u_t1', lab: 'tech', exerciseKey: 'blink', params: { intervalMs: 500 },
-        title: 'LED-ის ციმციმი (500 მწ)', instructions: 'დაწერე პროგრამა, რომელიც წითელ LED-ს (პინი 13) ყოველ 500 მილიწამში ჩართავს და გამორთავს. გამოიყენე pinMode, digitalWrite და delay.',
-        dueDate: dayOffset(7), status: 'active', createdAt: t },
-      { id: 'a_2', classId: 'c_1', teacherId: 'u_t1', lab: 'stem', exerciseKey: 'pendulum:period', params: { target: 1.5, tol: 0.05 },
-        title: 'ქანქარის პერიოდი 1.5 წმ', instructions: 'შეცვალე ქანქარის სიგრძე ისე, რომ რხევის პერიოდი 1.5 წამი გახდეს. ჩაიწერე, რა სიგრძე მიიღე და რატომ.',
-        dueDate: dayOffset(5), status: 'active', createdAt: t },
-      { id: 'a_3', classId: 'c_1', teacherId: 'u_t1', lab: 'tech', exerciseKey: 'button-led', params: {},
-        title: 'ღილაკით მართვადი LED', instructions: 'როცა ღილაკს (პინი 2) აჭერ, ყვითელი LED (პინი 12) უნდა ანთდეს, ხელის აშვებისას — ჩაქრეს.',
-        dueDate: dayOffset(10), status: 'active', createdAt: t },
-      { id: 'a_4', classId: 'c_2', teacherId: 'u_t1', lab: 'stem', exerciseKey: 'ph:neutral', params: { target: 7, tol: 0.3 },
-        title: 'ნეიტრალიზაცია (pH 7)', instructions: 'დაამატე ტუტე (NaOH) მჟავას ისე, რომ ხსნარის pH 7-ს მიუახლოვდეს (±0.3).',
-        dueDate: dayOffset(-1), status: 'active', createdAt: t },
-      { id: 'a_5', classId: 'c_2', teacherId: 'u_t1', lab: 'stem', exerciseKey: 'heating:thermostat', params: { target: 60, tol: 3 },
-        title: 'თერმოსტატი კოდით', instructions: 'კოდის ხიდში დაწერე წესი, რომელიც გამათბობელს მართავს და წყლის ტემპერატურას 60 °C-ის ახლოს (±3) ინარჩუნებს.',
-        dueDate: dayOffset(14), status: 'active', createdAt: t },
-    ];
-    const blinkCode = `void setup() {\n  pinMode(13, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(13, HIGH);\n  delay(500);\n  digitalWrite(13, LOW);\n  delay(500);\n}\n`;
-    const submissions = [
-      { id: 's_1', assignmentId: 'a_1', studentId: 'u_s1', passed: true, score: 100, message: 'ყველა შემოწმება გავიდა',
-        payload: { code: blinkCode, checks: [{ label: 'LED 13 ციმციმებს', ok: true }, { label: 'ინტერვალი ≈ 500 მწ', ok: true }] },
-        attempts: 2, submittedAt: t, late: false, feedback: 'ძალიან კარგი! სცადე millis()-ით იგივე.', grade: null },
-      { id: 's_2', assignmentId: 'a_2', studentId: 'u_s2', passed: false, score: 0, message: 'T = 1.738 წმ — შეამცირე სიგრძე',
-        payload: { values: { L: 0.75, g: 9.81, a0: 20, b: 0 }, rule: '' }, attempts: 1, submittedAt: t, late: false, feedback: '', grade: null },
-      { id: 's_3', assignmentId: 'a_2', studentId: 'u_s3', passed: true, score: 100, message: 'T = 1.504 წმ',
-        payload: { values: { L: 0.56, g: 9.81, a0: 20, b: 0 }, rule: '' }, attempts: 3, submittedAt: t, late: false, feedback: '', grade: null },
-    ];
-    return {
-      version: 3,
-      users, classes, assignments, submissions,
-      progress: { u_s1: { 'tech:blink': { passed: true, at: t } } },
-      drafts: {},
-      settings: {
-        modules: { tech: true, stem: true },
-        subjects: { physics: true, chemistry: true, math: true },
-        allowTeacherRegistration: true,
-        allowStudentRegistration: true,
-        schoolName: 'საჯარო სკოლა №1',
-      },
-    };
+    return { version: 3, seedV: 2, users: [adminUser()], classes: [], assignments: [], submissions: [], progress: {}, drafts: {}, designs: [], settings: DEFAULT_SETTINGS() };
   }
 
-  /** სადემონსტრაციო სქემები (Tinkercad-ის მსგავსი „ჩემი სქემები“) */
-  function seedDesigns() {
-    const T = (VL.Circuit && VL.Circuit.TEMPLATES) || [];
-    const mk = (owner, key, name) => { const t = T.find((x) => x.key === key); if (!t) return null; const n = now(); return { id: uid('dz'), ownerId: owner, name, parts: clone(t.parts), wires: clone(t.wires), code: t.code, createdAt: n, updatedAt: n }; };
-    return [mk('u_s1', 'blink', 'ჩემი პირველი ციმციმი'), mk('u_s1', 'button', 'ღილაკი დაფაზე'), mk('u_t1', 'motor', 'გაკვეთილი: ძრავა და ტრანზისტორი')].filter(Boolean);
+  /** ძველი სადემონსტრაციო ჩანაწერების წაშლა (წინა ვერსიიდან) */
+  const OLD_DEMO = { users: ['u_t1', 'u_t2', 'u_s1', 'u_s2', 'u_s3', 'u_s4'], classes: ['c_1', 'c_2', 'c_3'], assignments: ['a_1', 'a_2', 'a_3', 'a_4', 'a_5'], submissions: ['s_1', 's_2', 's_3'] };
+  function migrate() {
+    if (db.seedV === 2) return;
+    const U = new Set(OLD_DEMO.users), C = new Set(OLD_DEMO.classes), A = new Set(OLD_DEMO.assignments), S = new Set(OLD_DEMO.submissions);
+    db.users = db.users.filter((u) => !U.has(u.id));
+    db.classes = (db.classes || []).filter((c) => !C.has(c.id) && !U.has(c.teacherId));
+    db.classes.forEach((c) => { c.studentIds = (c.studentIds || []).filter((id) => !U.has(id)); });
+    db.assignments = (db.assignments || []).filter((x) => !A.has(x.id) && !C.has(x.classId) && !U.has(x.teacherId));
+    db.submissions = (db.submissions || []).filter((x) => !S.has(x.id) && !A.has(x.assignmentId) && !U.has(x.studentId));
+    U.forEach((id) => { if (db.progress) delete db.progress[id]; });
+    U.forEach((id) => { if (db.drafts) delete db.drafts[id]; });
+    db.designs = (db.designs || []).filter((d) => !U.has(d.ownerId));
+    if (db.settings && db.settings.schoolName === 'საჯარო სკოლა №1') db.settings.schoolName = '';
+    const adm = db.users.find((u) => u.role === 'admin');
+    if (adm && adm.passwordHash === hash(CONFIG.admin.password)) adm.mustChangePassword = true;
+    const sess = LS.get(CONFIG.sessionKey); if (sess && U.has(sess)) LS.del(CONFIG.sessionKey);
+    db.seedV = 2;
   }
 
   /* ---------- ჩატვირთვა / შენახვა ---------- */
@@ -119,7 +87,8 @@
   function load() {
     try { db = JSON.parse(LS.get(CONFIG.storageKey) || 'null'); } catch (e) { db = null; }
     if (!db || db.version !== 3 || !Array.isArray(db.users)) db = seed();
-    if (!Array.isArray(db.designs)) db.designs = seedDesigns();
+    if (!Array.isArray(db.designs)) db.designs = [];
+    migrate();
     ensureSingleAdmin();
     save();
   }
@@ -129,7 +98,7 @@
   function ensureSingleAdmin() {
     const admins = db.users.filter((u) => u.role === 'admin');
     if (admins.length === 0) {
-      db.users.unshift({ id: 'u_admin', role: 'admin', name: CONFIG.admin.name, email: CONFIG.admin.email, passwordHash: hash(CONFIG.admin.password), createdAt: now(), blocked: false });
+      db.users.unshift(adminUser());
     } else if (admins.length > 1) {
       admins.slice(1).forEach((u) => { u.role = 'teacher'; });
     }
@@ -201,7 +170,8 @@
       const u = userById(userId); if (!u) fail('მომხმარებელი ვერ მოიძებნა');
       if (u.passwordHash !== hash(oldPw)) fail('მიმდინარე პაროლი არასწორია');
       if (!newPw || newPw.length < 6) fail('ახალი პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო');
-      u.passwordHash = hash(newPw); save();
+      if (newPw === oldPw) fail('ახალი პაროლი უნდა განსხვავდებოდეს ძველისგან');
+      u.passwordHash = hash(newPw); delete u.mustChangePassword; save();
     },
 
     /* ---- მომხმარებლები ---- */
@@ -229,7 +199,8 @@
     async resetPassword(id, newPw) {
       const u = userById(id); if (!u) fail('მომხმარებელი ვერ მოიძებნა');
       if (!newPw || newPw.length < 6) fail('პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო');
-      u.passwordHash = hash(newPw); save();
+      if (newPw === oldPw) fail('ახალი პაროლი უნდა განსხვავდებოდეს ძველისგან');
+      u.passwordHash = hash(newPw); delete u.mustChangePassword; save();
     },
     async deleteUser(id) {
       const u = userById(id); if (!u) fail('მომხმარებელი ვერ მოიძებნა');
@@ -417,7 +388,7 @@
       };
     },
     async exportData() { const d = clone(db); d.users.forEach((u) => { u.passwordHash = '***'; }); return d; },
-    async resetDemo() { db = seed(); db.designs = seedDesigns(); save(); LS.del(CONFIG.sessionKey); },
+    async resetAll() { db = seed(); save(); LS.del(CONFIG.sessionKey); },
   };
 
   VL.api = api;

@@ -89,7 +89,7 @@
     const topic = params.topic || 'all';
     let list = FM.list.filter((x) => subj === 'all' || x.subj === subj);
     if (topic !== 'all' && subj !== 'all') list = list.filter((x) => x.topic === topic);
-    if (q) list = list.filter((x) => (x.name + ' ' + x.tex + ' ' + x.vars.map((v) => v.label).join(' ') + ' ' + ((FM.topics[x.subj] || {})[x.topic] || '')).toLowerCase().includes(q));
+    if (q) list = list.filter((x) => { const h = x.name + ' ' + x.tex + ' ' + x.vars.map((v) => v.label).join(' ') + ' ' + ((FM.topics[x.subj] || {})[x.topic] || ''); return (h + ' ' + VL.i18n.tr(h)).toLowerCase().includes(q); });
     const groups = {};
     list.forEach((x) => { const k = x.subj + '|' + x.topic; (groups[k] = groups[k] || []).push(x); });
     const withSim = FM.list.filter((x) => x.sim).length;
