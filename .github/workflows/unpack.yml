@@ -1,0 +1,23 @@
+# Unpacks virtual-lab-site.zip into the repository as normal source files.
+name: Unpack site zip
+on:
+  push:
+    paths: ['virtual-lab-site.zip']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip and commit
+        run: |
+          unzip -o virtual-lab-site.zip -d .
+          git rm -q --cached virtual-lab-site.zip
+          rm -f virtual-lab-site.zip
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Unpack virtual lab source from zip"
+          git push
